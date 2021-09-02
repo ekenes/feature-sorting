@@ -60,6 +60,14 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
       const layer = item.layer as esri.FeatureLayer;
 
+      if(layer.type !== "feature"){
+        return;
+      }
+
+      const fields = getValidFields(layer.fields);
+
+      console.log(layer.loaded)
+
       item.panel = {
         content: sortControls.cloneNode(true)
       } as esri.ListItemPanel;
@@ -67,15 +75,20 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
       const panelContent = item.panel.content as any;
 
-      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("select") ];
+      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("calcite-select") ];
       const [ sortOrder ] = [ ...panelContent.getElementsByTagName("calcite-action") ];
+
+      fields.forEach((field, i) => {
+        const option = document.createElement("calcite-option") as HTMLOptionElement;
+        option.value = field.name;
+        option.label = field.alias;
+        option.text = field.alias;
+        sortSelect.appendChild(option);
+      });
 
       sortOrder.addEventListener("click", () => {
         sortOrder.icon = sortOrder.icon === "sort-ascending" ? "sort-descending" : "sort-ascending";
-      })
-
-
-
+      });
     }
   });
   view.ui.add(new Expand({
@@ -83,5 +96,12 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
     content: layerList,
     group: "top-right"
   }), "top-right");
+
+  function getValidFields(fields: esri.Field[]) {
+    const validTypes = [ "small-integer", "integer", "single", "double", "long", "number", "date" ];
+
+    return fields
+      .filter( field => validTypes.indexOf(field.type) > -1 );
+  }
 
 })();

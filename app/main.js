@@ -45,6 +45,11 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     (function () { return __awaiter(void 0, void 0, void 0, function () {
+        function getValidFields(fields) {
+            var validTypes = ["small-integer", "integer", "single", "double", "long", "number", "date"];
+            return fields
+                .filter(function (field) { return validTypes.indexOf(field.type) > -1; });
+        }
         var webmap, map, view, sortControls, layerList;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -88,13 +93,25 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                             var showOptions = finalLayer.id === item.layer.id;
                             item.actionsOpen = showOptions;
                             var layer = item.layer;
+                            if (layer.type !== "feature") {
+                                return;
+                            }
+                            var fields = getValidFields(layer.fields);
+                            console.log(layer.loaded);
                             item.panel = {
                                 content: sortControls.cloneNode(true)
                             };
                             item.panel.content.style.display = "block";
                             var panelContent = item.panel.content;
-                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("select"))[0];
+                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("calcite-select"))[0];
                             var sortOrder = __spreadArrays(panelContent.getElementsByTagName("calcite-action"))[0];
+                            fields.forEach(function (field, i) {
+                                var option = document.createElement("calcite-option");
+                                option.value = field.name;
+                                option.label = field.alias;
+                                option.text = field.alias;
+                                sortSelect.appendChild(option);
+                            });
                             sortOrder.addEventListener("click", function () {
                                 sortOrder.icon = sortOrder.icon === "sort-ascending" ? "sort-descending" : "sort-ascending";
                             });

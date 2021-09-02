@@ -1,0 +1,24 @@
+{
+  "name": "feature-sorting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ekenes/feature-sorting.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ekenes/feature-sorting/issues"
+  },
+  "homepage": "https://github.com/ekenes/feature-sorting#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/arcgis-js-api": "4.20.1"
+  }
+}

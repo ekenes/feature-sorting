@@ -9,11 +9,18 @@ import BasemapLayerList = require("esri/widgets/BasemapLayerList");
 import ActionToggle = require("esri/support/actions/ActionToggle");
 import BasemapGallery = require("esri/widgets/BasemapGallery");
 import Color = require("esri/Color");
+import SizeVariable = require("esri/renderers/visualVariables/SizeVariable")
 
 import { getUrlParams } from "./urlParams";
 import FeatureLayer = require("esri/layers/FeatureLayer");
 
 ( async () => {
+
+  interface OrderBy {
+    field?: string;
+    valueExpression?: string;
+    mode: "ascending" | "descending";
+  }
 
   const { webmap } = getUrlParams();
 
@@ -66,8 +73,6 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
       const fields = getValidFields(layer.fields);
 
-      console.log(layer.loaded)
-
       item.panel = {
         content: sortControls.cloneNode(true)
       } as esri.ListItemPanel;
@@ -81,13 +86,34 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       fields.forEach((field, i) => {
         const option = document.createElement("calcite-option") as HTMLOptionElement;
         option.value = field.name;
-        option.label = field.alias;
-        option.text = field.alias;
+        option.label = field.name;
+        option.text = field.name;
         sortSelect.appendChild(option);
       });
 
+      let orderBy: OrderBy = {
+        field: null,
+        valueExpression: null,
+        mode: "ascending"
+      }
+
       sortOrder.addEventListener("click", () => {
-        sortOrder.icon = sortOrder.icon === "sort-ascending" ? "sort-descending" : "sort-ascending";
+        orderBy.mode === "ascending" ? "descending" : "ascending";
+        sortOrder.icon = `sort-${orderBy.mode}`;
+        updateOrderBy(layer, orderBy);
+      });
+
+      sortSelect.addEventListener("calciteSelectChange", () => {
+        if(sortSelect.value === "default"){
+          updateOrderBy(layer, null);
+        }
+        if(sortSelect.value === "renderer"){
+          orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, orderBy.mode);
+          updateOrderBy(layer, orderBy);
+        }
+        orderBy.field = sortSelect.value;
+        orderBy.valueExpression = null;
+        updateOrderBy(layer, orderBy);
       });
     }
   });
@@ -102,6 +128,72 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
     return fields
       .filter( field => validTypes.indexOf(field.type) > -1 );
+  }
+
+  function updateOrderBy(layer: FeatureLayer, orderBy: OrderBy){
+    (layer as any).orderBy = orderBy;
+  }
+
+  interface RendererOrderByParams {
+    field?: string;
+    normalizationField?: string;
+    valueExpression?: string;
+  }
+
+  function getRendererOrderBy(renderer: esri.RendererWithVisualVariables, mode: OrderBy["mode"]): OrderBy {
+    let field, valueExpression;
+
+    const sizeVV = rendererHasSizeVV(renderer);
+
+    if(sizeVV){
+      const { field, valueExpression } = getOrderBy(sizeVV);
+      return {
+        field,
+        valueExpression,
+        mode
+      };
+    }
+    if(renderer.type === "class-breaks" || renderer.type === "unique-value"){
+      const { field, valueExpression } = getOrderBy(renderer);
+      return {
+        field,
+        valueExpression,
+        mode
+      };
+    }
+    return {
+      field,
+      valueExpression,
+      mode
+    }
+  }
+
+  function rendererHasSizeVV(renderer: esri.RendererWithVisualVariables){
+    if(renderer.visualVariables){
+      const sizeVV = renderer.visualVariables.find(vv => vv.type === "size") as esri.SizeVariable;
+      return sizeVV;
+    }
+    return false;
+  }
+
+  function getOrderBy(params: RendererOrderByParams){
+    if(params.valueExpression){
+      const valueExpression = params.valueExpression;
+      return {
+        valueExpression
+      };
+    }
+    if(params.normalizationField){
+      const valueExpression = `$feature[${params.field}] / $feature[${params.normalizationField}]`;
+      return {
+        valueExpression
+      };
+    }
+    if(params.field){
+      return {
+        field: params.field
+      };
+    }
   }
 
 })();

@@ -50,6 +50,60 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
             return fields
                 .filter(function (field) { return validTypes.indexOf(field.type) > -1; });
         }
+        function updateOrderBy(layer, orderBy) {
+            layer.orderBy = orderBy;
+        }
+        function getRendererOrderBy(renderer, mode) {
+            var field, valueExpression;
+            var sizeVV = rendererHasSizeVV(renderer);
+            if (sizeVV) {
+                var _a = getOrderBy(sizeVV), field_1 = _a.field, valueExpression_1 = _a.valueExpression;
+                return {
+                    field: field_1,
+                    valueExpression: valueExpression_1,
+                    mode: mode
+                };
+            }
+            if (renderer.type === "class-breaks" || renderer.type === "unique-value") {
+                var _b = getOrderBy(renderer), field_2 = _b.field, valueExpression_2 = _b.valueExpression;
+                return {
+                    field: field_2,
+                    valueExpression: valueExpression_2,
+                    mode: mode
+                };
+            }
+            return {
+                field: field,
+                valueExpression: valueExpression,
+                mode: mode
+            };
+        }
+        function rendererHasSizeVV(renderer) {
+            if (renderer.visualVariables) {
+                var sizeVV = renderer.visualVariables.find(function (vv) { return vv.type === "size"; });
+                return sizeVV;
+            }
+            return false;
+        }
+        function getOrderBy(params) {
+            if (params.valueExpression) {
+                var valueExpression = params.valueExpression;
+                return {
+                    valueExpression: valueExpression
+                };
+            }
+            if (params.normalizationField) {
+                var valueExpression = "$feature[" + params.field + "] / $feature[" + params.normalizationField + "]";
+                return {
+                    valueExpression: valueExpression
+                };
+            }
+            if (params.field) {
+                return {
+                    field: params.field
+                };
+            }
+        }
         var webmap, map, view, sortControls, layerList;
         return __generator(this, function (_a) {
             switch (_a.label) {
@@ -97,7 +151,6 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 return;
                             }
                             var fields = getValidFields(layer.fields);
-                            console.log(layer.loaded);
                             item.panel = {
                                 content: sortControls.cloneNode(true)
                             };
@@ -108,12 +161,31 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                             fields.forEach(function (field, i) {
                                 var option = document.createElement("calcite-option");
                                 option.value = field.name;
-                                option.label = field.alias;
-                                option.text = field.alias;
+                                option.label = field.name;
+                                option.text = field.name;
                                 sortSelect.appendChild(option);
                             });
+                            var orderBy = {
+                                field: null,
+                                valueExpression: null,
+                                mode: "ascending"
+                            };
                             sortOrder.addEventListener("click", function () {
-                                sortOrder.icon = sortOrder.icon === "sort-ascending" ? "sort-descending" : "sort-ascending";
+                                orderBy.mode === "ascending" ? "descending" : "ascending";
+                                sortOrder.icon = "sort-" + orderBy.mode;
+                                updateOrderBy(layer, orderBy);
+                            });
+                            sortSelect.addEventListener("calciteSelectChange", function () {
+                                if (sortSelect.value === "default") {
+                                    updateOrderBy(layer, null);
+                                }
+                                if (sortSelect.value === "renderer") {
+                                    orderBy = getRendererOrderBy(layer.renderer, orderBy.mode);
+                                    updateOrderBy(layer, orderBy);
+                                }
+                                orderBy.field = sortSelect.value;
+                                orderBy.valueExpression = null;
+                                updateOrderBy(layer, orderBy);
                             });
                         }
                     });

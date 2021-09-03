@@ -87,7 +87,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
             return false;
         }
         function getOrderBy(params) {
-            if (params.valueExpression) {
+            if (params.valueExpression && params.valueExpression !== "$view.scale") {
                 var valueExpression = params.valueExpression;
                 return {
                     valueExpression: valueExpression

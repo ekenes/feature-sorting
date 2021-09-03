@@ -5,11 +5,7 @@ import MapView = require("esri/views/MapView");
 import Legend = require("esri/widgets/Legend");
 import Expand = require("esri/widgets/Expand");
 import LayerList = require("esri/widgets/LayerList");
-import BasemapLayerList = require("esri/widgets/BasemapLayerList");
-import ActionToggle = require("esri/support/actions/ActionToggle");
 import BasemapGallery = require("esri/widgets/BasemapGallery");
-import Color = require("esri/Color");
-import SizeVariable = require("esri/renderers/visualVariables/SizeVariable")
 
 import { getUrlParams } from "./urlParams";
 import FeatureLayer = require("esri/layers/FeatureLayer");
@@ -183,7 +179,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
   }
 
   function getOrderBy(params: RendererOrderByParams){
-    if(params.valueExpression){
+    if(params.valueExpression && params.valueExpression !== "$view.scale"){
       const valueExpression = params.valueExpression;
       return {
         valueExpression

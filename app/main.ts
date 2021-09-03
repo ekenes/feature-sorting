@@ -80,11 +80,11 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
       const panelContent = item.panel.content as any;
 
-      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("select") ];
+      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("calcite-select") ];
       const [ sortOrder ] = [ ...panelContent.getElementsByTagName("calcite-action") ];
 
       fields.forEach((field, i) => {
-        const option = document.createElement("option") as HTMLOptionElement;
+        const option = document.createElement("calcite-option") as HTMLOptionElement;
         option.value = field.name;
         option.label = field.alias;
         option.text = field.alias;
@@ -103,19 +103,20 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
         refreshOrder();
       });
 
-      sortSelect.addEventListener("change", refreshOrder);
+      sortSelect.addEventListener("calciteSelectChange", refreshOrder);
 
       function refreshOrder() {
-        if(sortSelect.value === "default"){
+        const sortValue = sortSelect.selectedOption.value;
+        if(sortValue === "default"){
           updateLayerOrderBy(layer, null);
           return;
         }
-        if(sortSelect.value === "renderer"){
+        if(sortValue === "renderer"){
           orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, orderBy.mode);
           updateLayerOrderBy(layer, orderBy);
           return;
         }
-        orderBy.field = sortSelect.value;
+        orderBy.field = sortValue;
         orderBy.valueExpression = null;
         updateLayerOrderBy(layer, orderBy);
       }

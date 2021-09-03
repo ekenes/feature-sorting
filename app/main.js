@@ -157,10 +157,10 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                             };
                             item.panel.content.style.display = "block";
                             var panelContent = item.panel.content;
-                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("select"))[0];
+                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("calcite-select"))[0];
                             var sortOrder = __spreadArrays(panelContent.getElementsByTagName("calcite-action"))[0];
                             fields.forEach(function (field, i) {
-                                var option = document.createElement("option");
+                                var option = document.createElement("calcite-option");
                                 option.value = field.name;
                                 option.label = field.alias;
                                 option.text = field.alias;
@@ -176,18 +176,19 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 sortOrder.icon = "sort-" + orderBy.mode;
                                 refreshOrder();
                             });
-                            sortSelect.addEventListener("change", refreshOrder);
+                            sortSelect.addEventListener("calciteSelectChange", refreshOrder);
                             function refreshOrder() {
-                                if (sortSelect.value === "default") {
+                                var sortValue = sortSelect.selectedOption.value;
+                                if (sortValue === "default") {
                                     updateLayerOrderBy(layer, null);
                                     return;
                                 }
-                                if (sortSelect.value === "renderer") {
+                                if (sortValue === "renderer") {
                                     orderBy = getRendererOrderBy(layer.renderer, orderBy.mode);
                                     updateLayerOrderBy(layer, orderBy);
                                     return;
                                 }
-                                orderBy.field = sortSelect.value;
+                                orderBy.field = sortValue;
                                 orderBy.valueExpression = null;
                                 updateLayerOrderBy(layer, orderBy);
                             }

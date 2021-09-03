@@ -41,7 +41,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand", "esri/widgets/LayerList", "esri/widgets/BasemapGallery", "./urlParams"], function (require, exports, WebMap, MapView, Legend, Expand, LayerList, BasemapGallery, urlParams_1) {
+define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand", "esri/widgets/LayerList", "esri/widgets/BasemapGallery", "esri/portal/PortalItem", "./urlParams"], function (require, exports, WebMap, MapView, Legend, Expand, LayerList, BasemapGallery, PortalItem, urlParams_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     (function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -105,7 +105,12 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                 };
             }
         }
-        var webmap, map, view, sortControls, layerList;
+        function statusMessage(head, info) {
+            document.getElementById("head").innerHTML = head;
+            document.getElementById("info").innerHTML = info;
+            overlay.style.visibility = "visible";
+        }
+        var webmap, map, view, sortControls, layerList, saveBtn, overlay, ok;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -126,6 +131,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                         container: "viewDiv"
                     });
                     view.ui.add("titleDiv", "top-right");
+                    view.ui.add("save-map", "top-left");
                     return [4 /*yield*/, view.when()];
                 case 3:
                     _a.sent();
@@ -199,6 +205,45 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                         content: layerList,
                         group: "top-right"
                     }), "top-right");
+                    saveBtn = document.getElementById("save-map");
+                    saveBtn.addEventListener("click", function () { return __awaiter(void 0, void 0, void 0, function () {
+                        var authoringAppUrl, item, itemPageUrl, link, error_1;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, map.updateFrom(view)];
+                                case 1:
+                                    _a.sent();
+                                    authoringAppUrl = "<a target=\"_blank\" href=\"https://ekenes.github.io/feature-sorting/?webmap=" + map.portalItem.id + "\">Feature sorting app</a>";
+                                    _a.label = 2;
+                                case 2:
+                                    _a.trys.push([2, 4, , 5]);
+                                    return [4 /*yield*/, map.saveAs(new PortalItem({
+                                            title: map.portalItem.title + " [FEATURE Z ORDER TEST]",
+                                            tags: ["test", "orderBy", "sort"],
+                                            description: "Webmap testing feature z order in various layers. MODIFIED in the " + authoringAppUrl + ". ORIGINAL ITEM DESCRIPTION: " + map.portalItem.description,
+                                            portal: map.portalItem.portal
+                                        }), {
+                                            ignoreUnsupported: false
+                                        })];
+                                case 3:
+                                    item = _a.sent();
+                                    itemPageUrl = item.portal.url + "/home/item.html?id=" + item.id;
+                                    link = "<a target=\"_blank\" href=\"" + itemPageUrl + "\">" + item.title + "</a>";
+                                    statusMessage("Save WebMap", "<br> Successfully saved as <i>" + link + "</i>");
+                                    return [3 /*break*/, 5];
+                                case 4:
+                                    error_1 = _a.sent();
+                                    statusMessage("Save WebMap", "<br> Error " + error_1);
+                                    return [3 /*break*/, 5];
+                                case 5: return [2 /*return*/];
+                            }
+                        });
+                    }); });
+                    overlay = document.getElementById("overlayDiv");
+                    ok = overlay.getElementsByTagName("input")[0];
+                    ok.addEventListener("click", function () {
+                        overlay.style.visibility = "hidden";
+                    });
                     return [2 /*return*/];
             }
         });

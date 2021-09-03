@@ -6,6 +6,7 @@ import Legend = require("esri/widgets/Legend");
 import Expand = require("esri/widgets/Expand");
 import LayerList = require("esri/widgets/LayerList");
 import BasemapGallery = require("esri/widgets/BasemapGallery");
+import PortalItem = require("esri/portal/PortalItem");
 
 import { getUrlParams } from "./urlParams";
 import FeatureLayer = require("esri/layers/FeatureLayer");
@@ -34,6 +35,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
     container: "viewDiv"
   });
   view.ui.add("titleDiv", "top-right");
+  view.ui.add("save-map", "top-left");
 
   await view.when();
 
@@ -197,5 +199,50 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       };
     }
   }
+
+  const saveBtn = document.getElementById("save-map");
+  saveBtn.addEventListener("click", async () => {
+
+    await map.updateFrom(view);
+
+    const authoringAppUrl = `<a target="_blank" href="https://ekenes.github.io/feature-sorting/?webmap=${map.portalItem.id}">Feature sorting app</a>`;
+
+    try{
+      const item = await map.saveAs(new PortalItem({
+        title: `${map.portalItem.title} [FEATURE Z ORDER TEST]`,
+        tags: [ "test", "orderBy", "sort" ],
+
+        description: `Webmap testing feature z order in various layers. MODIFIED in the ${authoringAppUrl}. ORIGINAL ITEM DESCRIPTION: ${map.portalItem.description}`,
+        portal: map.portalItem.portal
+      }), {
+        ignoreUnsupported: false
+      });
+
+      const itemPageUrl = `${item.portal.url}/home/item.html?id=${item.id}`;
+      const link = `<a target="_blank" href="${itemPageUrl}">${item.title}</a>`;
+
+      statusMessage(
+        "Save WebMap",
+        "<br> Successfully saved as <i>" + link + "</i>"
+      );
+
+    } catch (error){
+      statusMessage("Save WebMap", "<br> Error " + error);
+    }
+
+  });
+
+  const overlay = document.getElementById("overlayDiv");
+  const ok = overlay.getElementsByTagName("input")[0];
+
+  function statusMessage(head: string, info:string) {
+    document.getElementById("head").innerHTML = head;
+    document.getElementById("info").innerHTML = info;
+    overlay.style.visibility = "visible";
+  }
+
+  ok.addEventListener("click", function () {
+    overlay.style.visibility = "hidden";
+  });
 
 })();

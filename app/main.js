@@ -50,7 +50,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
             return fields
                 .filter(function (field) { return validTypes.indexOf(field.type) > -1; });
         }
-        function updateOrderBy(layer, orderBy) {
+        function updateLayerOrderBy(layer, orderBy) {
             layer.orderBy = orderBy;
         }
         function getRendererOrderBy(renderer, mode) {
@@ -173,19 +173,25 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                             sortOrder.addEventListener("click", function () {
                                 orderBy.mode === "ascending" ? "descending" : "ascending";
                                 sortOrder.icon = "sort-" + orderBy.mode;
-                                updateOrderBy(layer, orderBy);
+                                if (sortSelect.value === "default") {
+                                    updateLayerOrderBy(layer, null);
+                                    return;
+                                }
+                                updateLayerOrderBy(layer, orderBy);
                             });
                             sortSelect.addEventListener("calciteSelectChange", function () {
                                 if (sortSelect.value === "default") {
-                                    updateOrderBy(layer, null);
+                                    updateLayerOrderBy(layer, null);
+                                    return;
                                 }
                                 if (sortSelect.value === "renderer") {
                                     orderBy = getRendererOrderBy(layer.renderer, orderBy.mode);
-                                    updateOrderBy(layer, orderBy);
+                                    updateLayerOrderBy(layer, orderBy);
+                                    return;
                                 }
                                 orderBy.field = sortSelect.value;
                                 orderBy.valueExpression = null;
-                                updateOrderBy(layer, orderBy);
+                                updateLayerOrderBy(layer, orderBy);
                             });
                         }
                     });

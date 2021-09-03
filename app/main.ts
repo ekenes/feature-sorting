@@ -100,20 +100,26 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       sortOrder.addEventListener("click", () => {
         orderBy.mode === "ascending" ? "descending" : "ascending";
         sortOrder.icon = `sort-${orderBy.mode}`;
-        updateOrderBy(layer, orderBy);
+        if(sortSelect.value === "default"){
+          updateLayerOrderBy(layer, null);
+          return;
+        }
+        updateLayerOrderBy(layer, orderBy);
       });
 
       sortSelect.addEventListener("calciteSelectChange", () => {
         if(sortSelect.value === "default"){
-          updateOrderBy(layer, null);
+          updateLayerOrderBy(layer, null);
+          return;
         }
         if(sortSelect.value === "renderer"){
           orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, orderBy.mode);
-          updateOrderBy(layer, orderBy);
+          updateLayerOrderBy(layer, orderBy);
+          return;
         }
         orderBy.field = sortSelect.value;
         orderBy.valueExpression = null;
-        updateOrderBy(layer, orderBy);
+        updateLayerOrderBy(layer, orderBy);
       });
     }
   });
@@ -130,7 +136,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       .filter( field => validTypes.indexOf(field.type) > -1 );
   }
 
-  function updateOrderBy(layer: FeatureLayer, orderBy: OrderBy){
+  function updateLayerOrderBy(layer: FeatureLayer, orderBy: OrderBy){
     (layer as any).orderBy = orderBy;
   }
 

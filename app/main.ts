@@ -80,14 +80,14 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
       const panelContent = item.panel.content as any;
 
-      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("calcite-select") ];
+      const [ sortSelect ] = [ ...panelContent.getElementsByTagName("select") ];
       const [ sortOrder ] = [ ...panelContent.getElementsByTagName("calcite-action") ];
 
       fields.forEach((field, i) => {
-        const option = document.createElement("calcite-option") as HTMLOptionElement;
+        const option = document.createElement("option") as HTMLOptionElement;
         option.value = field.name;
-        option.label = field.name;
-        option.text = field.name;
+        option.label = field.alias;
+        option.text = field.alias;
         sortSelect.appendChild(option);
       });
 
@@ -98,16 +98,14 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       }
 
       sortOrder.addEventListener("click", () => {
-        orderBy.mode === "ascending" ? "descending" : "ascending";
+        orderBy.mode = orderBy.mode === "ascending" ? "descending" : "ascending";
         sortOrder.icon = `sort-${orderBy.mode}`;
-        if(sortSelect.value === "default"){
-          updateLayerOrderBy(layer, null);
-          return;
-        }
-        updateLayerOrderBy(layer, orderBy);
+        refreshOrder();
       });
 
-      sortSelect.addEventListener("calciteSelectChange", () => {
+      sortSelect.addEventListener("change", refreshOrder);
+
+      function refreshOrder() {
         if(sortSelect.value === "default"){
           updateLayerOrderBy(layer, null);
           return;
@@ -120,7 +118,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
         orderBy.field = sortSelect.value;
         orderBy.valueExpression = null;
         updateLayerOrderBy(layer, orderBy);
-      });
+      }
     }
   });
   view.ui.add(new Expand({
@@ -137,6 +135,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
   }
 
   function updateLayerOrderBy(layer: FeatureLayer, orderBy: OrderBy){
+    console.log("orderBy: ", orderBy);
     (layer as any).orderBy = orderBy;
   }
 
@@ -190,7 +189,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       };
     }
     if(params.normalizationField){
-      const valueExpression = `$feature[${params.field}] / $feature[${params.normalizationField}]`;
+      const valueExpression = `$feature["${params.field}"] / $feature["${params.normalizationField}"]`;
       return {
         valueExpression
       };

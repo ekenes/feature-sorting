@@ -51,6 +51,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                 .filter(function (field) { return validTypes.indexOf(field.type) > -1; });
         }
         function updateLayerOrderBy(layer, orderBy) {
+            console.log("orderBy: ", orderBy);
             layer.orderBy = orderBy;
         }
         function getRendererOrderBy(renderer, mode) {
@@ -93,7 +94,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                 };
             }
             if (params.normalizationField) {
-                var valueExpression = "$feature[" + params.field + "] / $feature[" + params.normalizationField + "]";
+                var valueExpression = "$feature[\"" + params.field + "\"] / $feature[\"" + params.normalizationField + "\"]";
                 return {
                     valueExpression: valueExpression
                 };
@@ -156,13 +157,13 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                             };
                             item.panel.content.style.display = "block";
                             var panelContent = item.panel.content;
-                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("calcite-select"))[0];
+                            var sortSelect = __spreadArrays(panelContent.getElementsByTagName("select"))[0];
                             var sortOrder = __spreadArrays(panelContent.getElementsByTagName("calcite-action"))[0];
                             fields.forEach(function (field, i) {
-                                var option = document.createElement("calcite-option");
+                                var option = document.createElement("option");
                                 option.value = field.name;
-                                option.label = field.name;
-                                option.text = field.name;
+                                option.label = field.alias;
+                                option.text = field.alias;
                                 sortSelect.appendChild(option);
                             });
                             var orderBy = {
@@ -171,15 +172,12 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 mode: "ascending"
                             };
                             sortOrder.addEventListener("click", function () {
-                                orderBy.mode === "ascending" ? "descending" : "ascending";
+                                orderBy.mode = orderBy.mode === "ascending" ? "descending" : "ascending";
                                 sortOrder.icon = "sort-" + orderBy.mode;
-                                if (sortSelect.value === "default") {
-                                    updateLayerOrderBy(layer, null);
-                                    return;
-                                }
-                                updateLayerOrderBy(layer, orderBy);
+                                refreshOrder();
                             });
-                            sortSelect.addEventListener("calciteSelectChange", function () {
+                            sortSelect.addEventListener("change", refreshOrder);
+                            function refreshOrder() {
                                 if (sortSelect.value === "default") {
                                     updateLayerOrderBy(layer, null);
                                     return;
@@ -192,7 +190,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 orderBy.field = sortSelect.value;
                                 orderBy.valueExpression = null;
                                 updateLayerOrderBy(layer, orderBy);
-                            });
+                            }
                         }
                     });
                     view.ui.add(new Expand({

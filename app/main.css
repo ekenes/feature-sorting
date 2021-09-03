@@ -30,7 +30,7 @@ select {
   display:none;
 }
 
-calcite-select{
+select{
   width: 80%;
   float: left;
 }

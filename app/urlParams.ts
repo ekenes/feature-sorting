@@ -7,7 +7,7 @@ export function getUrlParams() {
   const queryParams = document.location.search.substr(1);
   let result: UrlParams = {};
 
-  const defaultWebmapId = "2cd897d28ca842ecaa5df6bfe067c407";
+  const defaultWebmapId = "77accf337c2a4d61a154008a0bb9a52b";
 
   queryParams.split("&").forEach(function(part) {
     var item = part.split("=");

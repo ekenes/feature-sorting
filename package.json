@@ -19,6 +19,6 @@
   "homepage": "https://github.com/ekenes/feature-sorting#readme",
   "dependencies": {},
   "devDependencies": {
-    "@types/arcgis-js-api": "4.20.1"
+    "@types/arcgis-js-api": "http://localhost/arcgis-js-sdk-4/build-artifacts-scratch/data/api-reference/typings/arcgis-js-api-4.21.tgz"
   }
 }

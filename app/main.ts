@@ -133,7 +133,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
 
   function updateLayerOrderBy(layer: FeatureLayer, orderBy: OrderBy){
     console.log("orderBy: ", orderBy);
-    (layer as any).orderBy = orderBy;
+    layer.orderBy = orderBy;
   }
 
   interface RendererOrderByParams {

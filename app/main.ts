@@ -10,6 +10,7 @@ import PortalItem = require("esri/portal/PortalItem");
 
 import { getUrlParams } from "./urlParams";
 import FeatureLayer = require("esri/layers/FeatureLayer");
+import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
 
 ( async () => {
 
@@ -38,6 +39,24 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
   view.ui.add("save-map", "top-left");
 
   await view.when();
+
+  map.layers.forEach(async (layer: FeatureLayer) => {
+    console.log("Set orderBy ", layer.title);
+    const orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, "descending");
+    updateLayerOrderBy(layer, orderBy);
+
+    const layerView = await view.whenLayerView(layer);
+    whenTrueOnce(layer, "visible", () => {
+      const start = window.performance.now();
+
+      whenFalseOnce(layerView, "updating", () => {
+        const end = window.performance.now();
+        const duration = end - start;
+        console.log(layer.title, ": ", duration, " ms", `(${JSON.stringify(layer.orderBy)})`);
+      });
+
+    });
+  });
 
   view.ui.add(new Expand({
     content: new Legend({ view }),
@@ -120,6 +139,7 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
       }
     }
   });
+
   view.ui.add(new Expand({
     view,
     content: layerList,
@@ -150,21 +170,24 @@ import FeatureLayer = require("esri/layers/FeatureLayer");
     const sizeVV = rendererHasSizeVV(renderer);
 
     if(sizeVV){
-      const { field, valueExpression } = getOrderBy(sizeVV);
+      const orderBy = getOrderBy(sizeVV);
       return {
-        field,
-        valueExpression,
+        ...orderBy,
         mode
       };
     }
     if(renderer.type === "class-breaks" || renderer.type === "unique-value"){
-      const { field, valueExpression } = getOrderBy(renderer);
+      const orderBy = getOrderBy(renderer);
       return {
-        field,
-        valueExpression,
+        ...orderBy,
         mode
       };
     }
+
+    if(!field && !valueExpression){
+      return null;
+    }
+
     return {
       field,
       valueExpression,

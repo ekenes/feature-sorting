@@ -1,3 +1,14 @@
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -41,7 +52,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand", "esri/widgets/LayerList", "esri/widgets/BasemapGallery", "esri/portal/PortalItem", "./urlParams"], function (require, exports, WebMap, MapView, Legend, Expand, LayerList, BasemapGallery, PortalItem, urlParams_1) {
+define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand", "esri/widgets/LayerList", "esri/widgets/BasemapGallery", "esri/portal/PortalItem", "./urlParams", "esri/core/watchUtils"], function (require, exports, WebMap, MapView, Legend, Expand, LayerList, BasemapGallery, PortalItem, urlParams_1, watchUtils_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     (function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -58,20 +69,15 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
             var field, valueExpression;
             var sizeVV = rendererHasSizeVV(renderer);
             if (sizeVV) {
-                var _a = getOrderBy(sizeVV), field_1 = _a.field, valueExpression_1 = _a.valueExpression;
-                return {
-                    field: field_1,
-                    valueExpression: valueExpression_1,
-                    mode: mode
-                };
+                var orderBy = getOrderBy(sizeVV);
+                return __assign(__assign({}, orderBy), { mode: mode });
             }
             if (renderer.type === "class-breaks" || renderer.type === "unique-value") {
-                var _b = getOrderBy(renderer), field_2 = _b.field, valueExpression_2 = _b.valueExpression;
-                return {
-                    field: field_2,
-                    valueExpression: valueExpression_2,
-                    mode: mode
-                };
+                var orderBy = getOrderBy(renderer);
+                return __assign(__assign({}, orderBy), { mode: mode });
+            }
+            if (!field && !valueExpression) {
+                return null;
             }
             return {
                 field: field,
@@ -135,6 +141,29 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                     return [4 /*yield*/, view.when()];
                 case 3:
                     _a.sent();
+                    map.layers.forEach(function (layer) { return __awaiter(void 0, void 0, void 0, function () {
+                        var orderBy, layerView;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    console.log("Set orderBy ", layer.title);
+                                    orderBy = getRendererOrderBy(layer.renderer, "descending");
+                                    updateLayerOrderBy(layer, orderBy);
+                                    return [4 /*yield*/, view.whenLayerView(layer)];
+                                case 1:
+                                    layerView = _a.sent();
+                                    watchUtils_1.whenTrueOnce(layer, "visible", function () {
+                                        var start = window.performance.now();
+                                        watchUtils_1.whenFalseOnce(layerView, "updating", function () {
+                                            var end = window.performance.now();
+                                            var duration = end - start;
+                                            console.log(layer.title, ": ", duration, " ms", "(" + JSON.stringify(layer.orderBy) + ")");
+                                        });
+                                    });
+                                    return [2 /*return*/];
+                            }
+                        });
+                    }); });
                     view.ui.add(new Expand({
                         content: new Legend({ view: view }),
                         view: view,

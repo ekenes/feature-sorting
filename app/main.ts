@@ -112,8 +112,8 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
 
       sortSelect.addEventListener("calciteSelectChange", refreshOrder);
 
-      function refreshOrder() {
-        const sortValue = sortSelect.selectedOption.value;
+      function refreshOrder(optionIndex?: number) {
+        const sortValue = optionIndex ? sortSelect.children[optionIndex].value : sortSelect.selectedOption.value;
         if(sortValue === "default"){
           updateLayerOrderBy(layer, null);
           return;

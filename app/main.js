@@ -204,8 +204,8 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 refreshOrder();
                             });
                             sortSelect.addEventListener("calciteSelectChange", refreshOrder);
-                            function refreshOrder() {
-                                var sortValue = sortSelect.selectedOption.value;
+                            function refreshOrder(optionIndex) {
+                                var sortValue = optionIndex ? sortSelect.children[optionIndex].value : sortSelect.selectedOption.value;
                                 if (sortValue === "default") {
                                     updateLayerOrderBy(layer, null);
                                     return;

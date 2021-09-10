@@ -14,12 +14,6 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
 
 ( async () => {
 
-  interface OrderBy {
-    field?: string;
-    valueExpression?: string;
-    mode: "ascending" | "descending";
-  }
-
   const { webmap } = getUrlParams();
 
   const map = new WebMap({
@@ -43,7 +37,7 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
   map.layers.forEach(async (layer: FeatureLayer) => {
     console.log("Set orderBy ", layer.title);
     const orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, "descending");
-    updateLayerOrderBy(layer, orderBy);
+    // updateLayerOrderBy(layer, orderBy);
 
     const layerView = await view.whenLayerView(layer);
     whenTrueOnce(layer, "visible", () => {
@@ -108,15 +102,11 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
         sortSelect.appendChild(option);
       });
 
-      let orderBy: OrderBy = {
-        field: null,
-        valueExpression: null,
-        mode: "ascending"
-      }
+      let order: FeatureLayer["orderBy"]["order"] = "ascending";
 
       sortOrder.addEventListener("click", () => {
-        orderBy.mode = orderBy.mode === "ascending" ? "descending" : "ascending";
-        sortOrder.icon = `sort-${orderBy.mode}`;
+        order = order === "ascending" ? "descending" : "ascending";
+        sortOrder.icon = `sort-${order}`;
         refreshOrder();
       });
 
@@ -129,13 +119,14 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
           return;
         }
         if(sortValue === "renderer"){
-          orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, orderBy.mode);
+          const orderBy = getRendererOrderBy(layer.renderer as esri.RendererWithVisualVariables, order);
           updateLayerOrderBy(layer, orderBy);
           return;
         }
-        orderBy.field = sortValue;
-        orderBy.valueExpression = null;
-        updateLayerOrderBy(layer, orderBy);
+        updateLayerOrderBy(layer, {
+          field: sortValue,
+          order
+        });
       }
     }
   });
@@ -153,7 +144,7 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
       .filter( field => validTypes.indexOf(field.type) > -1 );
   }
 
-  function updateLayerOrderBy(layer: FeatureLayer, orderBy: OrderBy){
+  function updateLayerOrderBy(layer: FeatureLayer, orderBy: FeatureLayer["orderBy"]){
     console.log("orderBy: ", orderBy);
     layer.orderBy = orderBy;
   }
@@ -164,46 +155,40 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
     valueExpression?: string;
   }
 
-  function getRendererOrderBy(renderer: esri.RendererWithVisualVariables, mode: OrderBy["mode"]): OrderBy {
-    let field, valueExpression;
+  function getRendererOrderBy(renderer: esri.RendererWithVisualVariables, order: FeatureLayer["orderBy"]["order"]): FeatureLayer["orderBy"] {
+    let orderBy: FeatureLayer["orderBy"];
+
+    if(renderer.type === "class-breaks" || renderer.type === "unique-value"){
+      orderBy = getOrderBy(renderer)
+    }
 
     const sizeVV = rendererHasSizeVV(renderer);
 
     if(sizeVV){
-      const orderBy = getOrderBy(sizeVV);
-      return {
-        ...orderBy,
-        mode
-      };
-    }
-    if(renderer.type === "class-breaks" || renderer.type === "unique-value"){
-      const orderBy = getOrderBy(renderer);
-      return {
-        ...orderBy,
-        mode
-      };
+      orderBy = getOrderBy(sizeVV)
     }
 
-    if(!field && !valueExpression){
-      return null;
+    if(orderBy){
+      return {
+        ...orderBy,
+        order
+      }
     }
-
-    return {
-      field,
-      valueExpression,
-      mode
-    }
+    return null;
   }
 
   function rendererHasSizeVV(renderer: esri.RendererWithVisualVariables){
     if(renderer.visualVariables){
-      const sizeVV = renderer.visualVariables.find(vv => vv.type === "size") as esri.SizeVariable;
+      const sizeVV = renderer.visualVariables.find(vv => vv.type === "size" && vv.valueExpression !== "$view.scale") as esri.SizeVariable;
       return sizeVV;
     }
     return false;
   }
 
   function getOrderBy(params: RendererOrderByParams){
+    if(!params.field && !params.valueExpression){
+      return null;
+    }
     if(params.valueExpression && params.valueExpression !== "$view.scale"){
       const valueExpression = params.valueExpression;
       return {

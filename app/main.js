@@ -65,34 +65,31 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
             console.log("orderBy: ", orderBy);
             layer.orderBy = orderBy;
         }
-        function getRendererOrderBy(renderer, mode) {
-            var field, valueExpression;
+        function getRendererOrderBy(renderer, order) {
+            var orderBy;
+            if (renderer.type === "class-breaks" || renderer.type === "unique-value") {
+                orderBy = getOrderBy(renderer);
+            }
             var sizeVV = rendererHasSizeVV(renderer);
             if (sizeVV) {
-                var orderBy = getOrderBy(sizeVV);
-                return __assign(__assign({}, orderBy), { mode: mode });
+                orderBy = getOrderBy(sizeVV);
             }
-            if (renderer.type === "class-breaks" || renderer.type === "unique-value") {
-                var orderBy = getOrderBy(renderer);
-                return __assign(__assign({}, orderBy), { mode: mode });
+            if (orderBy) {
+                return __assign(__assign({}, orderBy), { order: order });
             }
-            if (!field && !valueExpression) {
-                return null;
-            }
-            return {
-                field: field,
-                valueExpression: valueExpression,
-                mode: mode
-            };
+            return null;
         }
         function rendererHasSizeVV(renderer) {
             if (renderer.visualVariables) {
-                var sizeVV = renderer.visualVariables.find(function (vv) { return vv.type === "size"; });
+                var sizeVV = renderer.visualVariables.find(function (vv) { return vv.type === "size" && vv.valueExpression !== "$view.scale"; });
                 return sizeVV;
             }
             return false;
         }
         function getOrderBy(params) {
+            if (!params.field && !params.valueExpression) {
+                return null;
+            }
             if (params.valueExpression && params.valueExpression !== "$view.scale") {
                 var valueExpression = params.valueExpression;
                 return {
@@ -148,7 +145,6 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 case 0:
                                     console.log("Set orderBy ", layer.title);
                                     orderBy = getRendererOrderBy(layer.renderer, "descending");
-                                    updateLayerOrderBy(layer, orderBy);
                                     return [4 /*yield*/, view.whenLayerView(layer)];
                                 case 1:
                                     layerView = _a.sent();
@@ -201,14 +197,10 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                 option.text = field.alias;
                                 sortSelect.appendChild(option);
                             });
-                            var orderBy = {
-                                field: null,
-                                valueExpression: null,
-                                mode: "ascending"
-                            };
+                            var order = "ascending";
                             sortOrder.addEventListener("click", function () {
-                                orderBy.mode = orderBy.mode === "ascending" ? "descending" : "ascending";
-                                sortOrder.icon = "sort-" + orderBy.mode;
+                                order = order === "ascending" ? "descending" : "ascending";
+                                sortOrder.icon = "sort-" + order;
                                 refreshOrder();
                             });
                             sortSelect.addEventListener("calciteSelectChange", refreshOrder);
@@ -219,13 +211,14 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                     return;
                                 }
                                 if (sortValue === "renderer") {
-                                    orderBy = getRendererOrderBy(layer.renderer, orderBy.mode);
+                                    var orderBy = getRendererOrderBy(layer.renderer, order);
                                     updateLayerOrderBy(layer, orderBy);
                                     return;
                                 }
-                                orderBy.field = sortValue;
-                                orderBy.valueExpression = null;
-                                updateLayerOrderBy(layer, orderBy);
+                                updateLayerOrderBy(layer, {
+                                    field: sortValue,
+                                    order: order
+                                });
                             }
                         }
                     });

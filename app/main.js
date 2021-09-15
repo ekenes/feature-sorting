@@ -75,7 +75,7 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                 orderBy = getOrderBy(sizeVV);
             }
             if (orderBy) {
-                return __assign(__assign({}, orderBy), { order: order });
+                return [__assign(__assign({}, orderBy), { order: order })];
             }
             return null;
         }
@@ -215,10 +215,10 @@ define(["require", "exports", "esri/WebMap", "esri/views/MapView", "esri/widgets
                                     updateLayerOrderBy(layer, orderBy);
                                     return;
                                 }
-                                updateLayerOrderBy(layer, {
-                                    field: sortValue,
-                                    order: order
-                                });
+                                updateLayerOrderBy(layer, [{
+                                        field: sortValue,
+                                        order: order
+                                    }]);
                             }
                         }
                     });

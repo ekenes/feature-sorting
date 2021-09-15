@@ -66,6 +66,8 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
 
   const sortControls = document.getElementById("sort-controls") as HTMLDivElement;
 
+  type Order = esri.OrderedLayerOrderBy["order"];
+
   const layerList = new LayerList({
     view,
     listItemCreatedFunction: (event) => {
@@ -102,7 +104,7 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
         sortSelect.appendChild(option);
       });
 
-      let order: FeatureLayer["orderBy"]["order"] = "ascending";
+      let order: Order = "ascending";
 
       sortOrder.addEventListener("click", () => {
         order = order === "ascending" ? "descending" : "ascending";
@@ -123,10 +125,10 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
           updateLayerOrderBy(layer, orderBy);
           return;
         }
-        updateLayerOrderBy(layer, {
+        updateLayerOrderBy(layer, [{
           field: sortValue,
           order
-        });
+        }]);
       }
     }
   });
@@ -155,8 +157,8 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
     valueExpression?: string;
   }
 
-  function getRendererOrderBy(renderer: esri.RendererWithVisualVariables, order: FeatureLayer["orderBy"]["order"]): FeatureLayer["orderBy"] {
-    let orderBy: FeatureLayer["orderBy"];
+  function getRendererOrderBy(renderer: esri.RendererWithVisualVariables, order: Order): FeatureLayer["orderBy"] {
+    let orderBy: esri.OrderedLayerOrderBy;
 
     if(renderer.type === "class-breaks" || renderer.type === "unique-value"){
       orderBy = getOrderBy(renderer)
@@ -169,10 +171,10 @@ import { whenFalseOnce, whenTrueOnce } from "esri/core/watchUtils";
     }
 
     if(orderBy){
-      return {
+      return [{
         ...orderBy,
         order
-      }
+      }]
     }
     return null;
   }
